@@ -1,5 +1,5 @@
 {
-    "name": "@rubix/git",
+    "name": "@rubix/messaging-queues",
     "version": "1.0.0",
     "description": "messaging queues based on different message brokers",
     "main": "dist/index.js",
