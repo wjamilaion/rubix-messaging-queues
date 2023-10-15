@@ -1,15 +1,16 @@
 {
-    "name": "messaging-queues",
+    "name": "@rubix/git",
     "version": "1.0.0",
     "description": "messaging queues based on different message brokers",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
-  "scripts": {
-        "build": "tsc",
+    "scripts": {
+        "build": "rimraf dist && tsc",
         "tsc": "tsc",
         "test": "echo \"Error: no test specified\" && exit 1",
         "format": "prettier \"**/*.ts\" --ignore-path ./.prettierignore --write && git status",
-        "lint": "eslint \"**/*.{ts,tsx}\""
+        "lint": "eslint \"**/*.{ts,tsx}\"",
+        "prepublish": "npm run build"
     },
     "keywords": [
         "messaging",
@@ -46,5 +47,8 @@
     },
     "files": [
         "dist/**/*"
-    ]
+    ],
+    "dependencies": {
+        "rimraf": "^5.0.5"
+    }
 }
