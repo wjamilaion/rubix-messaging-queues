@@ -3,8 +3,8 @@ import { isString } from '@nestjs/common/utils/shared.utils';
 import { MESSAGING_MODULE_QUEUE_PROCESS } from '../constants';
 
 export interface ProcessOptions {
-  queueName?: string;
-  routingKeys?: string[];
+  name: string;
+  routingKey?: string;
   exchangeName?: string;
 }
 

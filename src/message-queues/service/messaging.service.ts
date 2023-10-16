@@ -10,9 +10,15 @@ import {
   MESSAGING_MODULE_OPTIONS,
   MESSAGING_OPTIONS,
   MessagingQueue,
+  ProcessOptions,
 } from '../';
 import { MessagingOptions } from '..';
 import { RabbitMQQueue } from '../brokers';
+import { RedisQueue } from '../brokers/redis-queue';
+import {
+  ProcessCallbackFunction,
+  ProcessPromiseFunction,
+} from '../messaging.types';
 // import { RedisQueue } from '../brokers/redis-queue';
 @Injectable()
 export class MessagingService implements OnModuleInit, OnModuleDestroy {
@@ -36,6 +42,7 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     // Initialize the messaging queue based on the provided options
     if (options.brokerType === BROKER_TYPE.rabbitMQ) {
       this.messagingQueue = new RabbitMQQueue(
+        options,
         options.rabbitmq,
         queueName,
         exchangeName,
@@ -43,8 +50,8 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     } else if (options.brokerType === BROKER_TYPE.ibmmq) {
       throw new NotImplementedException();
     } else if (options.brokerType === BROKER_TYPE.redis) {
-      throw new NotImplementedException();
-      // this.messagingQueue = new RedisQueue(options.redis, queueName);
+      // throw new NotImplementedException();
+      this.messagingQueue = new RedisQueue(options, options.redis, queueName);
     } else {
       throw new Error('Invalid broker type');
     }
@@ -63,12 +70,20 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
     await this.messagingQueue.sendMessage(routingKey, message);
   }
 
-  async receiveMessage(
-    routingKey: string,
-    callback: (message: string) => void,
-    exchange: string,
+  receiveMessage<T>(
+    options: ProcessOptions,
+    callback: ProcessCallbackFunction<T>,
+    exchangeName: string,
+  ): Promise<void>;
+  receiveMessage<T>(
+    options: ProcessOptions,
+    callback: ProcessPromiseFunction<T>,
+  ): Promise<void>;
+  async receiveMessage<T>(
+    options: ProcessOptions,
+    callback: ProcessPromiseFunction<T> | ProcessCallbackFunction<T>,
   ): Promise<void> {
-    await this.messagingQueue.receiveMessage(routingKey, callback, exchange);
+    await this.messagingQueue.receiveMessage(options, callback);
   }
 
   async disconnect(): Promise<void> {

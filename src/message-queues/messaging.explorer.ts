@@ -1,13 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { DiscoveryService, MetadataScanner, ModuleRef } from '@nestjs/core';
+import {
+  DiscoveryService,
+  MetadataScanner,
+  ModuleRef,
+  createContextId,
+} from '@nestjs/core';
 import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { MessagingMetadataAccessor } from './messaging-metadata.accessor';
 import { MessagingService } from './service/messaging.service';
 import { ProcessOptions } from './decorators';
+import { Module } from '@nestjs/core/injector/module';
+import { Injector } from '@nestjs/core/injector/injector';
 
 @Injectable()
 export class MessageExplorer implements OnModuleInit {
   private readonly logger = new Logger(MessageExplorer.name);
+  private readonly injector = new Injector();
 
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -42,35 +50,77 @@ export class MessageExplorer implements OnModuleInit {
             : wrapper.metatype,
         ),
       );
-    return this.explore(providers);
+    return this._explore(providers);
   }
 
-  private explore(instanceWrappers: InstanceWrapper[]) {
-    for (const wrapper of instanceWrappers) {
-      const { instance } = wrapper;
-      this.metadataScanner.getAllMethodNames(instance).forEach(method => {
-        if (this.metadataAccessor.isProcessor(instance[method])) {
-          const metadata = this.metadataAccessor.getProcessMetadata(
-            instance[method],
-          );
-          this.setupSubscribers(metadata, instance, method);
-        }
-      });
-    }
-  }
-  async setupSubscribers(
-    options: ProcessOptions,
-    instance: Object,
-    method: string,
-  ) {
-    const service = this.moduleRef.get(MessagingService, { strict: false });
-    options.routingKeys.map(routingKey => {
-      this.logger.log(`subscribing to routing key ( ${routingKey} )`);
-      service.receiveMessage(
-        routingKey,
-        instance[method],
-        options.exchangeName,
-      );
+  private _explore(providers: InstanceWrapper[]) {
+    providers.forEach((wrapper: InstanceWrapper) => {
+      const { instance, metatype } = wrapper;
+      const isRequestScoped = !wrapper.isDependencyTreeStatic();
+      const { name: queueName } =
+        this.metadataAccessor.getQueueComponentMetadata(
+          // NOTE: We are relying on `instance.constructor` to properly support
+          // `useValue` and `useFactory` providers besides `useClass`.
+          instance.constructor || metatype,
+        );
+
+      // const queueToken = getQueueToken(queueName);
+      // const bullQueue = this.getQueue(queueToken, queueName);
+
+      this.metadataScanner
+        .getAllMethodNames(instance)
+        .forEach((key: string) => {
+          if (this.metadataAccessor.isProcessor(instance[key])) {
+            const metadata = this.metadataAccessor.getProcessMetadata(
+              instance[key],
+            );
+            this.handleProcessor(
+              instance,
+              key,
+              // bullQueue,
+              wrapper.host,
+              isRequestScoped,
+              metadata,
+            );
+          }
+        });
     });
+  }
+
+  handleProcessor(
+    instance: object,
+    key: string,
+    // queue: Queue,
+    moduleRef: Module,
+    isRequestScoped: boolean,
+    options?: ProcessOptions,
+  ) {
+    let call;
+    if (isRequestScoped) {
+      const callback = async (...args: unknown[]) => {
+        const contextId = createContextId();
+
+        if (this.moduleRef.registerRequestByContextId) {
+          // Additional condition to prevent breaking changes in
+          // applications that use @nestjs/bull older than v7.4.0.
+          const jobRef = args[0];
+          this.moduleRef.registerRequestByContextId(jobRef, contextId);
+        }
+
+        const contextInstance = await this.injector.loadPerContext(
+          instance,
+          moduleRef,
+          moduleRef.providers,
+          contextId,
+        );
+        return contextInstance[key].call(contextInstance, ...args);
+      };
+      call = callback;
+    } else {
+      call = instance[key].bind(instance);
+    }
+    const service = this.moduleRef.get(MessagingService, { strict: false });
+    this.logger.log(`subscribing to routing key ( ${options.routingKey} )`);
+    service.receiveMessage(options, call);
   }
 }

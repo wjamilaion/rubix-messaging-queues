@@ -4,3 +4,4 @@ export * from './service/messaging.service';
 export * from './constants';
 export * from './decorators';
 export * from './messaging.module';
+export * from './messaging.types';

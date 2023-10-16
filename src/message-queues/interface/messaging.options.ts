@@ -5,7 +5,11 @@ export enum BROKER_TYPE {
   ibmmq = 'ibmmq',
   redis = 'redis',
 }
+
 export interface MessagingOptions {
+  expirationSeconds?: number;
+  deadLetterExchange: string;
+  deadLetterQueue: string;
   /**
    * brokerType could be rabbitmq, redis
    */
