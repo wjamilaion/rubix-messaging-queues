@@ -1,6 +1,6 @@
 {
     "name": "@aiondigital/messaging-queues",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "description": "messaging queues based on different message brokers",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",

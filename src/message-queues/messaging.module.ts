@@ -52,6 +52,7 @@ export class MessagingModule {
           useValue: options,
         },
       ],
+      exports: [MESSAGING_OPTIONS]
     };
   }
 
