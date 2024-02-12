@@ -20,7 +20,7 @@ yarn add @aiondigital/messaging-queues
 To configure the module globally, you can use the `MessagingModule.forRootAsync` method. This allows you to set up the messaging options for your application.
 
 ```
-import { MessagingModule } from '@your-namespace/nestjs-messaging';
+import { MessagingModule } from '@aiondigital/messaging-queues';
 import { ConfigurationService } from './configuration.service';
 
 @Module({
@@ -50,7 +50,7 @@ The `MESSAGING_OPTIONS` object should have the following fields:
 You can send messages from different services in your NestJS application using the MessagingService. First, you need to register a queue:
 
 ```
-import { MessagingModule } from '@your-namespace/nestjs-messaging';
+import { MessagingModule } from '@aiondigital/messaging-queues';
 
 @Module({
   imports: [MessagingModule.registerQueue({
@@ -66,7 +66,7 @@ Then, in your service, you can use the `MessagingService` to send messages:
 
 ```
 import { Injectable } from '@nestjs/common';
-import { MessagingService } from '@your-namespace/nestjs-messaging';
+import { MessagingService } from '@aiondigital/messaging-queues';
 
 @Injectable()
 export class YourService {
@@ -87,7 +87,7 @@ That's it! You've now set up global configuration for the messaging module and c
 At the class level, you can use the @Processor decorator to specify which routing key this class will be responsible for processing. Here's how you can use it:
 
 ```
-import { Processor } from '@your-namespace/nestjs-messaging';
+import { Processor } from '@aiondigital/messaging-queues';
 
 @Processor(ROUTING_KEYS.ADD_AUDIT_LOG)
 export class YourMessageProcessor {
@@ -101,7 +101,7 @@ export class YourMessageProcessor {
 For individual message processing methods, you can use the `@Process` decorator to specify the details of the message processing. Here's how you can use it:
 
 ```
-import { Process } from '@your-namespace/nestjs-messaging';
+import { Process } from '@aiondigital/messaging-queues';
 import { CreateAuditLogInput } from './create-audit-log.dto';
 
 @Process({

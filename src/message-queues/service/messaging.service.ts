@@ -66,8 +66,9 @@ export class MessagingService implements OnModuleInit, OnModuleDestroy {
   async sendMessage(
     routingKey: string,
     message: Record<string, any>,
+    exchangeName?: string,
   ): Promise<void> {
-    await this.messagingQueue.sendMessage(routingKey, message);
+    await this.messagingQueue.sendMessage(routingKey, message, exchangeName);
   }
 
   receiveMessage<T>(

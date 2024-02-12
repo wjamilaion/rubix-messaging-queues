@@ -9,8 +9,7 @@ export interface MessagingQueue {
   sendMessage(
     topic: string,
     message: Record<string, any>,
-    queueName?: string,
-    options?: Record<string, string>,
+    exchangeName?: string,
   ): Promise<void>;
 
   receiveMessage<T>(
