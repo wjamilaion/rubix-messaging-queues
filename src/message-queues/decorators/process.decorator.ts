@@ -6,6 +6,7 @@ export interface ProcessOptions {
   name: string;
   routingKey?: string;
   exchangeName?: string;
+  noAck?: boolean;
 }
 
 export function Process(name: string): MethodDecorator;

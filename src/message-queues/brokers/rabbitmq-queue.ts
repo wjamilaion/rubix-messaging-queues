@@ -1,4 +1,4 @@
-import { Channel, connect, Connection } from 'amqplib';
+import { Channel, connect, Connection, Options } from 'amqplib';
 import { MessagingOptions, MessagingQueue, ProcessOptions } from './../index';
 import { Logger } from '@nestjs/common';
 import { toBuffer, toObject } from '../utils';
@@ -67,7 +67,7 @@ export class RabbitMQQueue implements MessagingQueue {
     if (!this.channel) {
       await this.connectAndCheck();
     }
-    const { exchangeName, routingKey } = options;
+    const { exchangeName, routingKey, noAck } = options;
     const queueName = this.queueName || '';
     const exchange = this.exchangeName || exchangeName || '';
 
@@ -86,6 +86,9 @@ export class RabbitMQQueue implements MessagingQueue {
 
     await this.channel.bindQueue(q.queue, exchange, routingKey);
 
+    const consumeOptions: Options.Consume = {
+      noAck
+    };
     this.channel.consume(q.queue, msg => {
       if (msg) {
         this.logger.log(`Received: message with routing key: '${routingKey}'`);
@@ -100,7 +103,7 @@ export class RabbitMQQueue implements MessagingQueue {
           this.channel!.ack(msg);
         });
       }
-    });
+    }, consumeOptions);
   }
   private async setupDeadLetterQueue(
     dead_letter_exchange: string,
