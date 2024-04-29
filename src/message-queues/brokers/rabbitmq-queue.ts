@@ -41,7 +41,7 @@ export class RabbitMQQueue implements MessagingQueue {
       await this.connectAndCheck();
     }
 
-    const exchange = this.exchangeName || exchangeName || '';
+    const exchange = exchangeName || this.exchangeName || '';
 
     // topic based
     await this.channel.assertExchange(exchange, 'topic', { durable: false });
@@ -69,7 +69,7 @@ export class RabbitMQQueue implements MessagingQueue {
     }
     const { exchangeName, routingKey, noAck } = options;
     const queueName = this.queueName || '';
-    const exchange = this.exchangeName || exchangeName || '';
+    const exchange = exchangeName || this.exchangeName || '';
 
     // setup dead letter queue
     const { deadLetterExchange, deadLetterQueue } = this.options;
